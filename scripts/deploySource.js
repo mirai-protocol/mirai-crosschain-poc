@@ -7,7 +7,7 @@
 const hre = require("hardhat");
 
 async function main() {
-  const Source = await hre.ethers.getContractFactory("ESource");
+  const Source = await hre.ethers.getContractFactory("DSource");
 
   const connext = "0xA7e906b2939cb12eB46Fa00413CE695996d2B7A8";
 
@@ -19,7 +19,7 @@ async function main() {
 
   await hre.run("verify:verify", {
     address: SourceInstance.address,
-    ///address: "0x027F89C87bb2F590b3F193e8EB3Cb544B1062498",
+    //address: "0x722aC7eBde367DB0b182a7AAaEFfb382A89c6B9b",
     constructorArguments: [connext],
   });
 }
