@@ -5,4 +5,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IDToken is IERC20 {
     function borrow(uint256 subAccountId, uint256 amount) external;
+
+    function repay(uint256 subAccountId, uint256 amount) external;
 }
