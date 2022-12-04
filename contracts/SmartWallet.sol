@@ -13,8 +13,6 @@ contract SmartWallet {
     address public sender;
     address public euler;
 
-    // IEToken(0x4ea65A17ddF15a5607e74a2B910268182e140957);
-
     function init(address user, address _euler) external {
         sender = msg.sender;
         require(!initialized, "Contract already initialized");
@@ -25,7 +23,7 @@ contract SmartWallet {
     }
 
     function handleEnterMarket(address underlying) internal {
-        IMarket market = IMarket(0x3419a9C22F665d61ED964Ec999Fc633d00755e55);
+        IMarket market = IMarket(0xe80eAef1F2807D6a1AEe0d9AA0E2449D374A5E3f);
         market.enterMarket(0, underlying);
     }
 

@@ -13,8 +13,8 @@ import "./interfaces/IERC20Lib.sol";
 contract ESource is IXReceiver, ERC20, ERC20Burnable, Ownable {
     // The connext contract on the origin domain
     IConnext public immutable connext;
-    address public eToken = address(0x4ea65A17ddF15a5607e74a2B910268182e140957);
-    address public current_user;
+    address public eToken = address(0x82b2528691DDF655F64CE57058c106AE386624e3);
+    address public currentUser;
     bool public comeback;
 
     // The canonical TEST Token on Goerli
@@ -22,7 +22,7 @@ contract ESource is IXReceiver, ERC20, ERC20Burnable, Ownable {
         IERC20Lib(0x07865c6E87B9F70255377e024ace6630C1Eaa37F); //usdc
 
     address public underlyingToken1 =
-        address(0x2eDdC4D432F0af7c05F9ACf95EBE8b12BD9f83B6);
+        address(0x2eDdC4D432F0af7c05F9ACf95EBE8b12BD9f83B6); // usdc (mumbai)
 
     address public EPNS_COMM_CONTRACT =
         address(0xb3971BCef2D791bc4027BbfedFb47319A4AAaaAa);
@@ -43,6 +43,7 @@ contract ESource is IXReceiver, ERC20, ERC20Burnable, Ownable {
         view
         returns (string memory)
     {
+        // flag=0 is for deposit
         if (flag == uint8(0)) {
             return
                 string.concat(
@@ -52,6 +53,7 @@ contract ESource is IXReceiver, ERC20, ERC20Burnable, Ownable {
                     " ",
                     "minted on Goerli"
                 );
+            // flag=1 is for withdraw
         } else if (flag == uint8(1)) {
             return
                 string.concat(
@@ -71,6 +73,7 @@ contract ESource is IXReceiver, ERC20, ERC20Burnable, Ownable {
         view
         returns (string memory)
     {
+        // flag=0 is for deposit and flag=1 is for withdraw
         if (flag == 0) {
             return string.concat("eUSDC", " ", "Minted");
         } else if (flag == 1) {
@@ -86,7 +89,7 @@ contract ESource is IXReceiver, ERC20, ERC20Burnable, Ownable {
         uint256 depositAmount,
         uint256 relayerFee
     ) external {
-        current_user = msg.sender;
+        currentUser = msg.sender;
         // User sends funds to this contract
         underlyingToken.transferFrom(msg.sender, address(this), depositAmount);
 
@@ -95,7 +98,7 @@ contract ESource is IXReceiver, ERC20, ERC20Burnable, Ownable {
             underlyingToken1,
             eToken,
             depositAmount,
-            current_user,
+            currentUser,
             uint8(0)
         );
 
@@ -116,13 +119,13 @@ contract ESource is IXReceiver, ERC20, ERC20Burnable, Ownable {
         uint256 withdrawAmount,
         uint256 relayerFee
     ) external {
-        current_user = msg.sender;
+        currentUser = msg.sender;
         // Encode the data needed for the target contract call.
         bytes memory callData = abi.encode(
             underlyingToken1,
             eToken,
             withdrawAmount,
-            current_user,
+            currentUser,
             uint8(1)
         );
 
@@ -150,17 +153,17 @@ contract ESource is IXReceiver, ERC20, ERC20Burnable, Ownable {
         bytes memory _callData
     ) external returns (bytes memory) {
         comeback = true;
-        (uint256 TokenAmount, uint256 Amount, uint8 flag) = abi.decode(
+        (uint256 TokenAmount, uint256 amount, uint8 flag) = abi.decode(
             _callData,
             (uint256, uint256, uint8)
         );
-
+        // flag=0 is for deposit
         if (flag == uint8(0)) {
-            _mint(current_user, TokenAmount);
+            _mint(currentUser, TokenAmount);
 
             IPUSHCommInterface(EPNS_COMM_CONTRACT).sendNotification(
                 Channel,
-                current_user, // to recipient,
+                currentUser, // to recipient,
                 bytes(
                     string(
                         abi.encodePacked(
@@ -176,15 +179,15 @@ contract ESource is IXReceiver, ERC20, ERC20Burnable, Ownable {
                 )
             );
         }
-
+        // flag=1 is for withdraw
         if (flag == uint8(1)) {
-            underlyingToken.transfer(current_user, Amount);
+            underlyingToken.transfer(currentUser, amount);
 
-            _burn(current_user, TokenAmount);
+            _burn(currentUser, TokenAmount);
 
             IPUSHCommInterface(EPNS_COMM_CONTRACT).sendNotification(
                 Channel,
-                current_user, // to recipient,
+                currentUser, // to recipient,
                 bytes(
                     string(
                         abi.encodePacked(

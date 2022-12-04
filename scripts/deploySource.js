@@ -7,19 +7,19 @@
 const hre = require("hardhat");
 
 async function main() {
-  const Source = await hre.ethers.getContractFactory("DSource");
+  const Source = await hre.ethers.getContractFactory("ESource");
 
   const connext = "0xA7e906b2939cb12eB46Fa00413CE695996d2B7A8";
 
   const SourceInstance = await Source.deploy(connext);
 
-  console.log("Source address ", SourceInstance.address);
+  // console.log("Source address ", SourceInstance.address);
 
-  await SourceInstance.deployed();
+  // await SourceInstance.deployed();
 
   await hre.run("verify:verify", {
-    address: SourceInstance.address,
-    //address: "0x722aC7eBde367DB0b182a7AAaEFfb382A89c6B9b",
+    // address: SourceInstance.address,
+    address: "0xf4bA4d42C0Cab995571e2fD044e48629F634518d",
     constructorArguments: [connext],
   });
 }

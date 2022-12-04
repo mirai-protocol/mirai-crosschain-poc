@@ -18,7 +18,7 @@ contract TargetNext is IXReceiver, Ownable {
     IConnext public connext =
         IConnext(0x173d82FF0294d4bb83A3AAF30Be958Cbc6D809f7);
 
-    address public euler = address(0xfd24d165d449aBf880A4Ae75dB2EFfD844f103E6);
+    address public euler = address(0x351e3ccF908C63c9f13c79af85d4961335F05Be1);
     address public Esource;
     address public Dsource;
 
@@ -30,7 +30,7 @@ contract TargetNext is IXReceiver, Ownable {
 
     address public walletImplementation;
 
-    mapping(address => address) public scw;
+    mapping(address => address) public scw; // smart contract wallet
 
     event WalletCreated(address _clone, address _user);
     event Deposit(address _token, address _user, uint256 _amount);
@@ -60,7 +60,7 @@ contract TargetNext is IXReceiver, Ownable {
             createWallet(user);
         }
 
-        // transfer usdc to scw
+        // transfer usdc to scw(smart contract wallet)
 
         IERC20(underlyingToken).transfer(scw[user], depositAmount);
 
@@ -81,11 +81,7 @@ contract TargetNext is IXReceiver, Ownable {
         uint256 withdrawAmount,
         address user
     ) public {
-        // IERC20(underlyingToken).approve(address(euler), depositAmount);
-
         require(scw[user] != address(0), "user address is not defined");
-
-        //IERC20(underlyingToken).transfer(scw[user], depositAmount);
 
         (uint256 res, uint256 amount) = ITarget(scw[user]).withdraw(
             withdrawAmount,
@@ -103,11 +99,7 @@ contract TargetNext is IXReceiver, Ownable {
         uint256 borrowAmount,
         address user
     ) public {
-        // IERC20(underlyingToken).approve(address(euler), depositAmount);
-
         require(scw[user] != address(0), "user address is not defined");
-
-        //IERC20(underlyingToken).transfer(scw[user], depositAmount);
 
         (uint256 res, uint256 amount) = ITarget(scw[user]).borrow(
             borrowAmount,
@@ -182,13 +174,14 @@ contract TargetNext is IXReceiver, Ownable {
         (
             address underlyingToken,
             address token,
-            uint256 Amount,
+            uint256 amount,
             address user,
             uint8 flag
         ) = abi.decode(_callData, (address, address, uint256, address, uint8));
 
+        // flag=0 is for deposit
         if (flag == 0) {
-            deposit(underlyingToken, token, Amount, user);
+            deposit(underlyingToken, token, amount, user);
 
             IPUSHCommInterface(EPNS_COMM_CONTRACT).sendNotification(
                 Channel,
@@ -202,13 +195,15 @@ contract TargetNext is IXReceiver, Ownable {
                             "+", // segregator
                             "Deposited in Mirai Protocol", // this is notificaiton title.
                             "+", // segregator
-                            formatStringNotification(0, Amount, underlyingToken) // notification body
+                            formatStringNotification(0, amount, underlyingToken) // notification body
                         )
                     )
                 )
             );
+
+            // flag=1 is for withdraw
         } else if (flag == 1) {
-            withdraw(underlyingToken, token, Amount, user);
+            withdraw(underlyingToken, token, amount, user);
 
             IPUSHCommInterface(EPNS_COMM_CONTRACT).sendNotification(
                 Channel,
@@ -222,13 +217,15 @@ contract TargetNext is IXReceiver, Ownable {
                             "+", // segregator
                             "Withdrawn in Mirai Protocol", // this is notificaiton title.
                             "+", // segregator
-                            formatStringNotification(1, Amount, underlyingToken) // notification body
+                            formatStringNotification(1, amount, underlyingToken) // notification body
                         )
                     )
                 )
             );
+
+            // flag=2 is for borrow
         } else if (flag == 2) {
-            borrow(underlyingToken, token, Amount, user);
+            borrow(underlyingToken, token, amount, user);
 
             IPUSHCommInterface(EPNS_COMM_CONTRACT).sendNotification(
                 Channel,
@@ -242,13 +239,14 @@ contract TargetNext is IXReceiver, Ownable {
                             "+", // segregator
                             "Borrowed from Mirai Protocol", // this is notificaiton title.
                             "+", // segregator
-                            formatStringNotification(2, Amount, underlyingToken) // notification body
+                            formatStringNotification(2, amount, underlyingToken) // notification body
                         )
                     )
                 )
             );
+            // flag=3 is for repay
         } else if (flag == 3) {
-            repay(underlyingToken, token, Amount, user);
+            repay(underlyingToken, token, amount, user);
 
             IPUSHCommInterface(EPNS_COMM_CONTRACT).sendNotification(
                 Channel,
@@ -262,7 +260,7 @@ contract TargetNext is IXReceiver, Ownable {
                             "+", // segregator
                             "Repayed on Mirai Protocol", // this is notificaiton title.
                             "+", // segregator
-                            formatStringNotification(3, Amount, underlyingToken) // notification body
+                            formatStringNotification(3, amount, underlyingToken) // notification body
                         )
                     )
                 )
@@ -274,15 +272,16 @@ contract TargetNext is IXReceiver, Ownable {
 
     function sendPong(
         uint256 TokenAmount,
-        uint256 Amount,
+        uint256 amount,
         uint8 flag
     ) public payable {
-        bytes memory callData = abi.encode(TokenAmount, Amount, flag);
+        bytes memory callData = abi.encode(TokenAmount, amount, flag);
 
+        // flag=0 is for deposit and flag=1 is for withdraw
         if (flag == 0 || flag == 1) {
             connext.xcall{value: 0}(
                 1735353714, // _destination: Domain ID of the destination chain
-                Esource, // _to: address of the target contract (Ping)
+                Esource, // Esource: address of the Esource contract
                 address(0), // _asset: address of the token contract
                 msg.sender, // _delegate: address that can revert or forceLocal on destination
                 0, // _amount: amount of tokens to transfer
@@ -291,10 +290,12 @@ contract TargetNext is IXReceiver, Ownable {
             );
         }
 
+        // flag=2 is for borrow and flag=3 is for repay
+
         if (flag == 2 || flag == 3) {
             connext.xcall{value: 0}(
                 1735353714, // _destination: Domain ID of the destination chain
-                Dsource, // _to: address of the target contract (Ping)
+                Dsource, // Dsource: address of the Dsource contract
                 address(0), // _asset: address of the token contract
                 msg.sender, // _delegate: address that can revert or forceLocal on destination
                 0, // _amount: amount of tokens to transfer
@@ -309,6 +310,7 @@ contract TargetNext is IXReceiver, Ownable {
         uint256 amount,
         address underlyingToken
     ) internal view returns (string memory) {
+        // flag=0 is for deposit
         if (flag == uint8(0)) {
             return
                 string.concat(
@@ -320,6 +322,7 @@ contract TargetNext is IXReceiver, Ownable {
                     " ",
                     "on Mumbai Successful"
                 );
+            // flag=1 is for withdraw
         } else if (flag == uint8(1)) {
             return
                 string.concat(
@@ -332,6 +335,7 @@ contract TargetNext is IXReceiver, Ownable {
                     "on Mumbai Successful"
                 );
         }
+        // flag=2 is for borrow
         if (flag == uint8(2)) {
             return
                 string.concat(
@@ -343,6 +347,7 @@ contract TargetNext is IXReceiver, Ownable {
                     " ",
                     "on Mumbai Successful"
                 );
+            // flag=2 is for repay
         } else if (flag == uint8(3)) {
             return
                 string.concat(

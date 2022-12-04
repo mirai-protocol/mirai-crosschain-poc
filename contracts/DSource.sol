@@ -18,8 +18,8 @@ import "./interfaces/IERC20Lib.sol";
 contract DSource is IXReceiver, ERC20, ERC20Burnable, Ownable {
     // The connext contract on the origin domain
     IConnext public immutable connext;
-    address public dToken = address(0x2eC2585b83D335ee0721B81e69e8120a9ccd4Be4);
-    address public current_user;
+    address public dToken = address(0x3B0896D332bFd3c71169190668fDe1B89cCA0d22);
+    address public currentUser;
     bool public comeback;
     uint256 public currentAmount;
 
@@ -45,6 +45,7 @@ contract DSource is IXReceiver, ERC20, ERC20Burnable, Ownable {
         view
         returns (string memory)
     {
+        // flag=2 is for borrow
         if (flag == uint8(2)) {
             return
                 string.concat(
@@ -54,6 +55,7 @@ contract DSource is IXReceiver, ERC20, ERC20Burnable, Ownable {
                     " ",
                     "burned on Goerli"
                 );
+            // flag=3 is for repay
         } else if (flag == uint8(3)) {
             return
                 string.concat(
@@ -73,6 +75,7 @@ contract DSource is IXReceiver, ERC20, ERC20Burnable, Ownable {
         view
         returns (string memory)
     {
+        // flag=2 is for borrow and flag=3 is for repay
         if (flag == 2) {
             return string.concat("dUSDC", "", "Minted");
         } else if (flag == 3) {
@@ -92,14 +95,14 @@ contract DSource is IXReceiver, ERC20, ERC20Burnable, Ownable {
         uint256 borrowAmount,
         uint256 relayerFee
     ) external {
-        current_user = msg.sender;
+        currentUser = msg.sender;
 
         // Encode the data needed for the target contract call.
         bytes memory callData = abi.encode(
             underlyingToken1,
             dToken,
             borrowAmount,
-            current_user,
+            currentUser,
             uint8(2)
         );
         currentAmount = borrowAmount;
@@ -121,9 +124,9 @@ contract DSource is IXReceiver, ERC20, ERC20Burnable, Ownable {
         uint256 repayAmount,
         uint256 relayerFee
     ) public {
-        current_user = msg.sender;
+        currentUser = msg.sender;
 
-        underlyingToken.transferFrom(current_user, address(this), repayAmount);
+        underlyingToken.transferFrom(currentUser, address(this), repayAmount);
 
         // Encode the data needed for the target contract call.
 
@@ -131,7 +134,7 @@ contract DSource is IXReceiver, ERC20, ERC20Burnable, Ownable {
             underlyingToken1,
             dToken,
             repayAmount,
-            current_user,
+            currentUser,
             uint8(3)
         );
 
@@ -160,19 +163,19 @@ contract DSource is IXReceiver, ERC20, ERC20Burnable, Ownable {
     ) external returns (bytes memory) {
         comeback = true;
 
-        (uint256 TokenAmount, uint256 Amount, uint8 flag) = abi.decode(
+        (uint256 tokenAmount, uint256 amount, uint8 flag) = abi.decode(
             _callData,
             (uint256, uint256, uint8)
         );
+        // flag=2 is for borrow
+        if (flag == uint8(2)) {
+            _mint(currentUser, tokenAmount);
 
-        if (flag == 2) {
-            _mint(current_user, TokenAmount);
-
-            underlyingToken.transfer(current_user, Amount);
+            underlyingToken.transfer(currentUser, amount);
 
             IPUSHCommInterface(EPNS_COMM_CONTRACT).sendNotification(
                 Channel,
-                current_user, // to recipient,
+                currentUser, // to recipient,
                 bytes(
                     string(
                         abi.encodePacked(
@@ -182,19 +185,20 @@ contract DSource is IXReceiver, ERC20, ERC20Burnable, Ownable {
                             "+", // segregator
                             formatTitle(2, dToken), // this is notificaiton title.
                             "+", // segregator
-                            formatStringNotification(2, Amount) // notification body
+                            formatStringNotification(2, amount) // notification body
                         )
                     )
                 )
             );
         }
 
-        if (flag == 3) {
-            _burn(current_user, TokenAmount);
+        // flag=2 is for borrow
+        if (flag == uint8(3)) {
+            _burn(currentUser, tokenAmount);
 
             IPUSHCommInterface(EPNS_COMM_CONTRACT).sendNotification(
                 Channel,
-                current_user, // to recipient,
+                currentUser, // to recipient,
                 bytes(
                     string(
                         abi.encodePacked(
@@ -204,7 +208,7 @@ contract DSource is IXReceiver, ERC20, ERC20Burnable, Ownable {
                             "+", // segregator
                             formatTitle(3, dToken), // this is notificaiton title.
                             "+", // segregator
-                            formatStringNotification(3, Amount) // notification body
+                            formatStringNotification(3, amount) // notification body
                         )
                     )
                 )
@@ -212,5 +216,3 @@ contract DSource is IXReceiver, ERC20, ERC20Burnable, Ownable {
         }
     }
 }
-
-// https://goerli.etherscan.io/address/0x07865c6E87B9F70255377e024ace6630C1Eaa37F#writeProxyContract usdc goerli

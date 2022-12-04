@@ -7,26 +7,18 @@
 const hre = require("hardhat");
 
 async function main() {
- 
-   const Source = await hre.ethers.getContractFactory("SmartWallet");
+  const Source = await hre.ethers.getContractFactory("SmartWallet");
 
-   
-const SourceInstance = await Source.deploy();
+  // const SourceInstance = await Source.deploy();
 
-await SourceInstance.deployed();
+  // await SourceInstance.deployed();
 
-
-console.log('Source address ', SourceInstance.address);
-
- 
-
+  // console.log("Source address ", SourceInstance.address);
 
   await hre.run("verify:verify", {
-   address: SourceInstance.address,
-   //address:"0x1cE88ad8E4669783f39dddfA016163a513D23EF2",
-    constructorArguments: [
-      
-    ]
+    // address: SourceInstance.address,
+    address: "0xE3C824378c5124A292c20679fFEA3abF610fa1d3",
+    constructorArguments: [],
   });
 }
 
