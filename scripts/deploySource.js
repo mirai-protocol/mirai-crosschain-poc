@@ -13,13 +13,13 @@ async function main() {
 
   const SourceInstance = await Source.deploy(connext);
 
-  // console.log("Source address ", SourceInstance.address);
+  console.log("Source address ", SourceInstance.address);
 
-  // await SourceInstance.deployed();
+  await SourceInstance.deployed();
 
   await hre.run("verify:verify", {
-    // address: SourceInstance.address,
-    address: "0xf4bA4d42C0Cab995571e2fD044e48629F634518d",
+    address: SourceInstance.address,
+    // address: "0x105F951097ed6E7D8Bd9f81bc9A5b1BD867430F9",
     constructorArguments: [connext],
   });
 }

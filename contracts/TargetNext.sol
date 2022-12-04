@@ -278,7 +278,7 @@ contract TargetNext is IXReceiver, Ownable {
         bytes memory callData = abi.encode(TokenAmount, amount, flag);
 
         // flag=0 is for deposit and flag=1 is for withdraw
-        if (flag == 0 || flag == 1) {
+        if (flag == uint8(0) || flag == uint8(1)) {
             connext.xcall{value: 0}(
                 1735353714, // _destination: Domain ID of the destination chain
                 Esource, // Esource: address of the Esource contract
@@ -292,7 +292,7 @@ contract TargetNext is IXReceiver, Ownable {
 
         // flag=2 is for borrow and flag=3 is for repay
 
-        if (flag == 2 || flag == 3) {
+        if (flag == uint8(2) || flag == uint8(3)) {
             connext.xcall{value: 0}(
                 1735353714, // _destination: Domain ID of the destination chain
                 Dsource, // Dsource: address of the Dsource contract

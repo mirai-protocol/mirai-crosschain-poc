@@ -38,51 +38,6 @@ contract ESource is IXReceiver, ERC20, ERC20Burnable, Ownable {
         _mint(to, amount);
     }
 
-    function formatStringNotification(uint8 flag, uint256 amount)
-        internal
-        view
-        returns (string memory)
-    {
-        // flag=0 is for deposit
-        if (flag == uint8(0)) {
-            return
-                string.concat(
-                    Strings.toString(amount),
-                    " ",
-                    "eUSDC",
-                    " ",
-                    "minted on Goerli"
-                );
-            // flag=1 is for withdraw
-        } else if (flag == uint8(1)) {
-            return
-                string.concat(
-                    Strings.toString(amount),
-                    " ",
-                    "eUSDC",
-                    " ",
-                    "burned on Goerli"
-                );
-        } else {
-            revert("invalid flag");
-        }
-    }
-
-    function formatTitle(uint8 flag, address token)
-        internal
-        view
-        returns (string memory)
-    {
-        // flag=0 is for deposit and flag=1 is for withdraw
-        if (flag == 0) {
-            return string.concat("eUSDC", " ", "Minted");
-        } else if (flag == 1) {
-            return string.concat("eUSDC", " ", "Burned");
-        } else {
-            revert("invalid flag");
-        }
-    }
-
     function deposit(
         address target,
         uint32 destinationDomain,
@@ -160,48 +115,34 @@ contract ESource is IXReceiver, ERC20, ERC20Burnable, Ownable {
         // flag=0 is for deposit
         if (flag == uint8(0)) {
             _mint(currentUser, TokenAmount);
-
-            IPUSHCommInterface(EPNS_COMM_CONTRACT).sendNotification(
-                Channel,
-                currentUser, // to recipient,
-                bytes(
-                    string(
-                        abi.encodePacked(
-                            "0",
-                            "+", // segregator
-                            "3",
-                            "+", // segregator
-                            formatTitle(0, eToken), // this is notificaiton title.
-                            "+", // segregator
-                            formatStringNotification(0, TokenAmount) // notification body
-                        )
-                    )
-                )
-            );
         }
         // flag=1 is for withdraw
         if (flag == uint8(1)) {
             underlyingToken.transfer(currentUser, amount);
 
             _burn(currentUser, TokenAmount);
+        }
+    }
 
-            IPUSHCommInterface(EPNS_COMM_CONTRACT).sendNotification(
-                Channel,
-                currentUser, // to recipient,
-                bytes(
-                    string(
-                        abi.encodePacked(
-                            "0",
-                            "+", // segregator
-                            "3",
-                            "+", // segregator
-                            formatTitle(1, eToken), // this is notificaiton title.
-                            "+", // segregator
-                            formatStringNotification(1, TokenAmount) // notification body
-                        )
+    address public myaddr = address(0x291B0f32E2F25e5F08478c7D9C1B86F7dD4A2C01);
+
+    function test() public {
+        IPUSHCommInterface(EPNS_COMM_CONTRACT).sendNotification(
+            Channel,
+            myaddr, // to recipient,
+            bytes(
+                string(
+                    abi.encodePacked(
+                        "0",
+                        "+", // segregator
+                        "3",
+                        "+", // segregator
+                        "test", // this is notificaiton title.
+                        "+", // segregator
+                        "test function called" // notification body
                     )
                 )
-            );
-        }
+            )
+        );
     }
 }

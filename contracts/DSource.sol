@@ -40,51 +40,6 @@ contract DSource is IXReceiver, ERC20, ERC20Burnable, Ownable {
         connext = _connext;
     }
 
-    function formatStringNotification(uint8 flag, uint256 amount)
-        internal
-        view
-        returns (string memory)
-    {
-        // flag=2 is for borrow
-        if (flag == uint8(2)) {
-            return
-                string.concat(
-                    Strings.toString(amount),
-                    " ",
-                    "dUSDC",
-                    " ",
-                    "burned on Goerli"
-                );
-            // flag=3 is for repay
-        } else if (flag == uint8(3)) {
-            return
-                string.concat(
-                    Strings.toString(amount),
-                    " ",
-                    "dUSDC",
-                    " ",
-                    "minted on Goerli"
-                );
-        } else {
-            revert("invalid flag");
-        }
-    }
-
-    function formatTitle(uint8 flag, address token)
-        internal
-        view
-        returns (string memory)
-    {
-        // flag=2 is for borrow and flag=3 is for repay
-        if (flag == 2) {
-            return string.concat("dUSDC", "", "Minted");
-        } else if (flag == 3) {
-            return string.concat("dUSDC", " ", "Burned");
-        } else {
-            revert("invalid flag");
-        }
-    }
-
     function mint(address to, uint256 amount) public onlyOwner {
         _mint(to, amount);
     }
@@ -172,47 +127,11 @@ contract DSource is IXReceiver, ERC20, ERC20Burnable, Ownable {
             _mint(currentUser, tokenAmount);
 
             underlyingToken.transfer(currentUser, amount);
-
-            IPUSHCommInterface(EPNS_COMM_CONTRACT).sendNotification(
-                Channel,
-                currentUser, // to recipient,
-                bytes(
-                    string(
-                        abi.encodePacked(
-                            "0",
-                            "+", // segregator
-                            "3",
-                            "+", // segregator
-                            formatTitle(2, dToken), // this is notificaiton title.
-                            "+", // segregator
-                            formatStringNotification(2, amount) // notification body
-                        )
-                    )
-                )
-            );
         }
 
         // flag=2 is for borrow
         if (flag == uint8(3)) {
             _burn(currentUser, tokenAmount);
-
-            IPUSHCommInterface(EPNS_COMM_CONTRACT).sendNotification(
-                Channel,
-                currentUser, // to recipient,
-                bytes(
-                    string(
-                        abi.encodePacked(
-                            "0",
-                            "+", // segregator
-                            "3",
-                            "+", // segregator
-                            formatTitle(3, dToken), // this is notificaiton title.
-                            "+", // segregator
-                            formatStringNotification(3, amount) // notification body
-                        )
-                    )
-                )
-            );
         }
     }
 }
