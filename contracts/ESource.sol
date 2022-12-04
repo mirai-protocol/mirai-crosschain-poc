@@ -5,11 +5,13 @@ import "@connext/nxtp-contracts/contracts/core/connext/interfaces/IConnext.sol";
 import "@connext/nxtp-contracts/contracts/core/connext/interfaces/IXReceiver.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract ESource is IXReceiver, ERC20, Ownable {
+contract ESource is IXReceiver, ERC20, ERC20Burnable, Ownable {
     // The connext contract on the origin domain
     IConnext public immutable connext;
+    address public eToken = address(0x4ea65A17ddF15a5607e74a2B910268182e140957);
     address public current_user;
     bool public comeback;
 
@@ -37,9 +39,38 @@ contract ESource is IXReceiver, ERC20, Ownable {
 
         // Encode the data needed for the target contract call.
         bytes memory callData = abi.encode(
+            underlyingToken,
+            eToken,
             depositAmount,
-            address(current_user),
-            uint256(0)
+            current_user,
+            uint8(0)
+        );
+
+        connext.xcall{value: relayerFee}(
+            destinationDomain, // _destination: Domain ID of the destination chain
+            target, // _to: address of the target contract
+            address(0), // _asset: address of the token contract
+            msg.sender, // _delegate: address that can revert or forceLocal on destination
+            0, // _amount: amount of tokens to transfer
+            0, // _slippage: the max slippage the user will accept in BPS (0.3%)
+            callData // _callData: the encoded calldata to send
+        );
+    }
+
+    function withdraw(
+        address target,
+        uint32 destinationDomain,
+        uint256 withdrawAmount,
+        uint256 relayerFee
+    ) external {
+        current_user = msg.sender;
+        // Encode the data needed for the target contract call.
+        bytes memory callData = abi.encode(
+            underlyingToken,
+            eToken,
+            withdrawAmount,
+            current_user,
+            uint8(1)
         );
 
         connext.xcall{value: relayerFee}(
@@ -66,16 +97,17 @@ contract ESource is IXReceiver, ERC20, Ownable {
         bytes memory _callData
     ) external returns (bytes memory) {
         comeback = true;
-        uint256 eTokenAmount = abi.decode(_callData, (uint256));
+        (uint256 TokenAmount, uint256 Amount, uint8 flag) = abi.decode(
+            _callData,
+            (uint256, uint256, uint8)
+        );
 
-        _mint(current_user, eTokenAmount);
+        if (flag == uint8(0)) {
+            _mint(current_user, TokenAmount);
+        }
+        if (flag == uint8(1)) {
+            underlyingToken.transfer(current_user, Amount);
+            _burn(current_user, TokenAmount);
+        }
     }
 }
-
-// GOERLI   deposit(100) --> Source(100) --> etoken(100)
-
-// POLYGON   Target-->etoken --> etoken Target(100)
-
-// Source1   borrow-->(100)   Target-->borrow(100)  Target(100 Tokens + x dTokens)
-
-// Source1<-- 100T+xdTokens  --> USER

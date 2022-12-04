@@ -33,7 +33,7 @@ contract SmartWallet {
         uint256 depositAmount,
         address underlyingToken,
         address eToken
-    ) public returns (uint256 res) {
+    ) public returns (uint256 res, uint256) {
         IERC20(underlyingToken).approve(address(euler), depositAmount);
 
         handleEnterMarket(address(underlyingToken));
@@ -47,14 +47,14 @@ contract SmartWallet {
 
         res = curr_balance - balance;
 
-        return res;
+        return (res, depositAmount);
     }
 
     function withdraw(
         uint256 withdrawAmount,
-        address underlyingToken,
+        // address underlyingToken,
         address eToken
-    ) public returns (uint256 res) {
+    ) public returns (uint256 res, uint256) {
         uint256 balance = IEToken(eToken).balanceOf(address(this));
 
         IEToken(eToken).withdraw(0, withdrawAmount);
@@ -64,14 +64,14 @@ contract SmartWallet {
 
         res = balance - curr_balance;
 
-        return res;
+        return (res, withdrawAmount);
     }
 
     function borrow(
         uint256 borrowAmount,
-        address underlyingToken,
+        //address underlyingToken,
         address dToken
-    ) public returns (uint256 res) {
+    ) public returns (uint256 res, uint256) {
         uint256 balance = IEToken(dToken).balanceOf(address(this));
 
         IDToken(dToken).borrow(0, borrowAmount);
@@ -81,14 +81,14 @@ contract SmartWallet {
 
         res = curr_balance - balance;
 
-        return res;
+        return (res, borrowAmount);
     }
 
     function repay(
         uint256 repayAmount,
         address underlyingToken,
         address dToken
-    ) public returns (uint256 res) {
+    ) public returns (uint256 res, uint256) {
         IERC20(underlyingToken).approve(address(euler), repayAmount);
 
         uint256 balance = IEToken(dToken).balanceOf(address(this));
@@ -100,6 +100,6 @@ contract SmartWallet {
 
         res = balance - curr_balance;
 
-        return res;
+        return (res, repayAmount);
     }
 }

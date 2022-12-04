@@ -7,13 +7,9 @@
 const hre = require("hardhat");
 
 async function main() {
-  const Source = await hre.ethers.getContractFactory("ESource");
+  const Source = await hre.ethers.getContractFactory("DSource");
 
   const connext = "0xA7e906b2939cb12eB46Fa00413CE695996d2B7A8";
-  // const connext ="0x99A784d082476E551E5fc918ce3d849f2b8e89B6";
-  // const connextT = "0x173d82FF0294d4bb83A3AAF30Be958Cbc6D809f7";
-
-  const source = "0xBF7f531f069C7a95280Fe3B04e1A5Fe010d873Fb";
 
   const SourceInstance = await Source.deploy(connext);
 

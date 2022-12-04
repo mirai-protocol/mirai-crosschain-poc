@@ -8,10 +8,12 @@ const hre = require("hardhat");
 
 async function main() {
   const Source = await hre.ethers.getContractFactory("TargetNext");
+  const Esource = "0x9Ad7e36569824Cdfd1e4E356436e8Ce756580F46";
+  const Dsource = "0x1dce3F9a3E006475a0930CF338D3795EEa6b7f9b";
 
-  const implementation = "0x876699e39bAA682325aDcE31e6C5EA7D257Da400";
+  const implementation = "0x5EB52070e7A8B4fEFdC9541d2008822C54D022C9";
 
-  // const SourceInstance = await Source.deploy(implementation);
+  // const SourceInstance = await Source.deploy(implementation, Esource, Dsource);
 
   // await SourceInstance.deployed();
 
@@ -19,8 +21,8 @@ async function main() {
 
   await hre.run("verify:verify", {
     //address: SourceInstance.address,
-    address: "0x79dC0C7367f5455d13f13EB6720dD7fb97042F2b",
-    constructorArguments: [implementation],
+    address: "0x6459c5DD711b10524Ad77559793158ea5AcC980F",
+    constructorArguments: [implementation, Esource, Dsource],
   });
 }
 
