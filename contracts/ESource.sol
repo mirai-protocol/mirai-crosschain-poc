@@ -19,6 +19,9 @@ contract ESource is IXReceiver, ERC20, ERC20Burnable, Ownable {
     IERC20 public underlyingToken =
         IERC20(0x07865c6E87B9F70255377e024ace6630C1Eaa37F); //usdc
 
+    address public underlyingToken1 =
+        address(0x2eDdC4D432F0af7c05F9ACf95EBE8b12BD9f83B6);
+
     constructor(IConnext _connext) ERC20("Mirai circle USD", "mUSDC") {
         connext = _connext;
     }
@@ -39,7 +42,7 @@ contract ESource is IXReceiver, ERC20, ERC20Burnable, Ownable {
 
         // Encode the data needed for the target contract call.
         bytes memory callData = abi.encode(
-            underlyingToken,
+            underlyingToken1,
             eToken,
             depositAmount,
             current_user,
@@ -66,7 +69,7 @@ contract ESource is IXReceiver, ERC20, ERC20Burnable, Ownable {
         current_user = msg.sender;
         // Encode the data needed for the target contract call.
         bytes memory callData = abi.encode(
-            underlyingToken,
+            underlyingToken1,
             eToken,
             withdrawAmount,
             current_user,

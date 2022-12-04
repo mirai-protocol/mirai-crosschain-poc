@@ -179,7 +179,6 @@ contract TargetNext is IXReceiver, Ownable {
 
         (uint256 res, uint256 amount) = ITarget(scw[user]).withdraw(
             withdrawAmount,
-            address(underlyingToken),
             address(eToken)
         );
 
@@ -202,7 +201,6 @@ contract TargetNext is IXReceiver, Ownable {
 
         (uint256 res, uint256 amount) = ITarget(scw[user]).borrow(
             borrowAmount,
-            address(underlyingToken),
             address(dToken)
         );
 
